@@ -15,20 +15,10 @@ TEST_F(PointerConstructor, One_shared_pointer_use_count_should_return_1)
     EXPECT_EQ(1, cut.use_count());
 }
 
-TEST_F(PointerConstructor, Two_shared_pointers_use_count_should_return_2)
+TEST_F(PointerConstructor, Shared_pointer_should_return_value_of_old_raw_pointer)
 {
     my::shared_ptr<int> cut(temp);
-    my::shared_ptr<int> cut2(temp);
-    EXPECT_EQ(2, cut.use_count());
-}
-
-TEST_F(PointerConstructor, Destructor_removing_one_of_two_pointers_use_count_should_return_1)
-{
-    my::shared_ptr<int> cut(temp);
-    {
-        my::shared_ptr<int> cut2(temp);
-    }
-    EXPECT_EQ(1, cut.use_count());
+    EXPECT_EQ(10, *cut.get());
 }
 
 class CopyConstructor : public ::testing::Test
@@ -51,6 +41,13 @@ TEST_F(CopyConstructor, Two_shared_pointers_after_copy_one_to_another_use_count_
     EXPECT_EQ(2, cut2.use_count());
 }
 
+TEST_F(CopyConstructor, Two_shared_pointers_after_copy_one_to_another_their_values_should_be_the_same)
+{
+    my::shared_ptr<int> cut(new int(10));
+    my::shared_ptr<int> cut2(cut);
+    EXPECT_EQ(*cut.get(), *cut2.get());
+}
+
 class MoveConstructor : public ::testing::Test
 {
 public:
@@ -63,6 +60,7 @@ TEST_F(MoveConstructor, Two_shared_pointers_after_move_one_to_another_use_count_
     my::shared_ptr<int> cut2(std::move(cut));
     EXPECT_EQ(0, cut.use_count());
 }
+
 
 TEST_F(MoveConstructor, Two_shared_pointers_after_move_one_to_another_use_count_for_second_should_return_1)
 {
@@ -182,13 +180,31 @@ TEST_F(MoveOperator, old_pointer_get_method_should_return_nullptr)
     EXPECT_EQ(nullptr, ptr1.get());
 }
 
-TEST_F(MoveOperator, use_count_should_stay_at_old_value_after_moving)
+TEST_F(MoveOperator, old_pointer_use_count_should_return_zero)
 {
     my::shared_ptr<int> ptr1(new int(12));
-    size_t old_counter = ptr1.use_count();
+    my::shared_ptr<int> ptr2;
+    ptr2 = std::move(ptr1);
+
+    EXPECT_EQ(0, ptr1.use_count());
+}
+
+TEST_F(MoveOperator, new_pointer_get_method_should_return_old_value_of_ptr1)
+{
+    my::shared_ptr<int> ptr1(new int(12));
+    auto old_value = *ptr1.get();
 
     my::shared_ptr<int> ptr2;
     ptr2 = std::move(ptr1);
 
-    EXPECT_EQ(old_counter, ptr2.use_count());
+    EXPECT_EQ(old_value, *ptr2.get());
+}
+
+TEST_F(MoveOperator, new_pointer_use_count_should_return_1)
+{
+    my::shared_ptr<int> ptr1(new int(12));
+    my::shared_ptr<int> ptr2;
+    ptr2 = std::move(ptr1);
+
+    EXPECT_EQ(1, ptr2.use_count());
 }

@@ -14,7 +14,7 @@ class shared_ptr
 public:
     shared_ptr();
     explicit shared_ptr(T *ptr);
-    explicit shared_ptr(shared_ptr &other);
+    explicit shared_ptr(const shared_ptr &other);
     explicit shared_ptr(shared_ptr &&rref);
     ~shared_ptr();
 
@@ -38,9 +38,8 @@ private:
 
     T *m_ptr = nullptr;
     controlBlock *m_controlBlock = nullptr;
-    inline static std::unordered_map<T *, controlBlock *> map;
 
-    void allocateControlBlock(T *ptr);
+    void Release();
 };
 
 template <typename T>
@@ -52,13 +51,17 @@ inline shared_ptr<T>::shared_ptr()
 template <typename T>
 inline shared_ptr<T>::shared_ptr(T *ptr)
 {
-    allocateControlBlock(ptr);
+    m_ptr = ptr;
+    m_controlBlock = new controlBlock;
+    m_controlBlock->m_shared_refs_count++;
 }
 
 template <typename T>
-inline shared_ptr<T>::shared_ptr(shared_ptr &other)
+inline shared_ptr<T>::shared_ptr(const shared_ptr &other)
 {
-    allocateControlBlock(other.get());
+    m_ptr = other.get();
+    m_controlBlock = other.m_controlBlock;
+    m_controlBlock->m_shared_refs_count++;
 }
 
 template <typename T>
@@ -74,7 +77,7 @@ inline shared_ptr<T>::shared_ptr(shared_ptr &&rref)
 template <typename T>
 inline shared_ptr<T>::~shared_ptr()
 {
-    this->reset();
+    reset();
 }
 
 template <typename T>
@@ -86,23 +89,14 @@ inline T *shared_ptr<T>::get() const noexcept
 template <typename T>
 inline void shared_ptr<T>::reset(T *other) noexcept
 {
-    if (m_controlBlock->m_shared_refs_count > 0)
-        m_controlBlock->m_shared_refs_count--;
-
-    if (m_controlBlock->m_shared_refs_count == 0)
-    {
-        if (m_ptr)
-        {
-            map.erase(map.find(m_ptr));
-            delete m_ptr;
-            m_ptr = nullptr;
-        }
-        if (m_controlBlock->m_weak_refs_count == 0)
-            delete m_controlBlock;
-    }
+    Release();
 
     if (other)
-        allocateControlBlock(other);
+    {
+        m_ptr = other;
+        m_controlBlock = new controlBlock;
+        m_controlBlock->m_shared_refs_count++;
+    }
 }
 
 template <typename T>
@@ -134,8 +128,10 @@ inline shared_ptr<T> &shared_ptr<T>::operator=(const shared_ptr<T> &other) noexc
 {
     if (this->m_ptr != other.m_ptr)
     {
-        std::cout << '!' << std::endl;
-        this->allocateControlBlock(other.get());
+        
+        m_ptr = other.get();
+        m_controlBlock = other.m_controlBlock;
+        m_controlBlock->m_shared_refs_count++;
     }
     return *this;
 }
@@ -145,35 +141,34 @@ inline shared_ptr<T> &shared_ptr<T>::operator=(shared_ptr<T> &&other) noexcept
 {
     if (this->m_ptr != other.m_ptr)
     {
-        std::cout << '!' << std::endl;
-        this->allocateControlBlock(other.get());
+        this->Release();
+        this->m_ptr = other.m_ptr;
+        this->m_controlBlock = other.m_controlBlock;
 
         other.m_ptr = nullptr;
-        other.m_controlBlock->m_shared_refs_count--;        
+        other.m_controlBlock = new controlBlock;
     }
 
     return *this;
 }
 
 template <typename T>
-inline void shared_ptr<T>::allocateControlBlock(T *ptr)
+inline void shared_ptr<T>::Release()
 {
-    auto it = map.find(ptr);
-    if (it != map.end())
-    {
-        m_ptr = it->first;
-        if (m_controlBlock)
-            delete m_controlBlock;
-        m_controlBlock = it->second;
-    }
-    else
-    {
-        m_controlBlock = new controlBlock;
-        m_ptr = ptr;
-        map.try_emplace(m_ptr, m_controlBlock);
-    }
-
-    m_controlBlock->m_shared_refs_count++;
+  if (m_controlBlock)
+  {
+      if (m_controlBlock->m_shared_refs_count > 0)
+          m_controlBlock->m_shared_refs_count--;
+  
+      if (m_controlBlock->m_shared_refs_count == 0 && m_ptr)
+      {
+          delete m_ptr;
+          m_ptr = nullptr;
+      }
+  
+      if (m_controlBlock->m_weak_refs_count == 0)
+          delete m_controlBlock;
+  }
 }
 
 } // namespace my
