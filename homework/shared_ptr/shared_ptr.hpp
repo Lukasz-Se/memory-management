@@ -26,8 +26,8 @@ public:
     T &operator*() const noexcept;
     T *operator->() const noexcept;
 
-    shared_ptr<T> &operator=(const shared_ptr<T> &other) noexcept;
-    shared_ptr<T> &operator=(shared_ptr<T> &&other) noexcept;
+    shared_ptr<T> &operator=(const shared_ptr<T> &r) noexcept;
+    shared_ptr<T> &operator=(shared_ptr<T> &&r) noexcept;
 
 private:
     struct controlBlock
