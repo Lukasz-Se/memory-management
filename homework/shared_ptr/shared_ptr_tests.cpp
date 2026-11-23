@@ -24,7 +24,6 @@ TEST_F(PointerConstructor, Shared_pointer_should_return_value_of_old_raw_pointer
 class CopyConstructor : public ::testing::Test
 {
 public:
- 
 };
 
 TEST_F(CopyConstructor, Two_shared_pointers_after_copy_one_to_another_use_count_for_first_should_return_2)
@@ -51,7 +50,6 @@ TEST_F(CopyConstructor, Two_shared_pointers_after_copy_one_to_another_their_valu
 class MoveConstructor : public ::testing::Test
 {
 public:
-   
 };
 
 TEST_F(MoveConstructor, Two_shared_pointers_after_move_one_to_another_use_count_for_first_should_return_0)
@@ -60,7 +58,6 @@ TEST_F(MoveConstructor, Two_shared_pointers_after_move_one_to_another_use_count_
     my::shared_ptr<int> cut2(std::move(cut));
     EXPECT_EQ(0, cut.use_count());
 }
-
 
 TEST_F(MoveConstructor, Two_shared_pointers_after_move_one_to_another_use_count_for_second_should_return_1)
 {

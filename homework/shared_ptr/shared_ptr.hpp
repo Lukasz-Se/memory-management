@@ -128,7 +128,7 @@ inline shared_ptr<T> &shared_ptr<T>::operator=(const shared_ptr<T> &other) noexc
 {
     if (this->m_ptr != other.m_ptr)
     {
-        
+        this->Release();
         m_ptr = other.get();
         m_controlBlock = other.m_controlBlock;
         m_controlBlock->m_shared_refs_count++;
@@ -155,20 +155,20 @@ inline shared_ptr<T> &shared_ptr<T>::operator=(shared_ptr<T> &&other) noexcept
 template <typename T>
 inline void shared_ptr<T>::Release()
 {
-  if (m_controlBlock)
-  {
-      if (m_controlBlock->m_shared_refs_count > 0)
-          m_controlBlock->m_shared_refs_count--;
-  
-      if (m_controlBlock->m_shared_refs_count == 0 && m_ptr)
-      {
-          delete m_ptr;
-          m_ptr = nullptr;
-      }
-  
-      if (m_controlBlock->m_weak_refs_count == 0)
-          delete m_controlBlock;
-  }
+    if (m_controlBlock)
+    {
+        if (m_controlBlock->m_shared_refs_count > 0)
+            m_controlBlock->m_shared_refs_count--;
+
+        if (m_controlBlock->m_shared_refs_count == 0 && m_ptr)
+        {
+            delete m_ptr;
+            m_ptr = nullptr;
+        }
+
+        if (m_controlBlock->m_shared_refs_count == 0 && m_controlBlock->m_weak_refs_count == 0)
+            delete m_controlBlock;
+    }
 }
 
 } // namespace my
