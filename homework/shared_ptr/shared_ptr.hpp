@@ -2,10 +2,10 @@
 #include <atomic>
 #include <cstddef>
 
-
 namespace my
 {
-template <typename T> class weak_ptr;
+template <typename T>
+class weak_ptr;
 
 template <typename T>
 class shared_ptr
