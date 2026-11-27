@@ -1,12 +1,11 @@
 #pragma once
 #include <atomic>
 #include <cstddef>
-#include <unordered_map>
 
-#include <iostream>
 
 namespace my
 {
+template <typename T> class weak_ptr;
 
 template <typename T>
 class shared_ptr
@@ -14,8 +13,8 @@ class shared_ptr
 public:
     shared_ptr();
     explicit shared_ptr(T *ptr);
-    explicit shared_ptr(const shared_ptr &other);
-    explicit shared_ptr(shared_ptr &&rref);
+    shared_ptr(const shared_ptr &other);
+    shared_ptr(shared_ptr &&rref);
     ~shared_ptr();
 
     T *get() const noexcept;
@@ -26,8 +25,8 @@ public:
     T &operator*() const noexcept;
     T *operator->() const noexcept;
 
-    shared_ptr<T> &operator=(const shared_ptr<T> &r) noexcept;
-    shared_ptr<T> &operator=(shared_ptr<T> &&r) noexcept;
+    shared_ptr<T> &operator=(const shared_ptr<T> &other) noexcept;
+    shared_ptr<T> &operator=(shared_ptr<T> &&other) noexcept;
 
 private:
     struct controlBlock
@@ -40,6 +39,8 @@ private:
     controlBlock *m_controlBlock = nullptr;
 
     void Release();
+
+    friend class weak_ptr<T>;
 };
 
 template <typename T>

@@ -50,3 +50,6 @@ googletest/
 *.exe
 *.out
 *.app
+
+homework/shared_ptr/weak_ptr.hpp
+homework/shared_ptr/weak_ptr_tests.cpp
